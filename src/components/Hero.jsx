@@ -1,4 +1,6 @@
-import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Magnetic from './Magnetic'
 
 const slides = [
   'https://keysiksagency.com/wp-content/uploads/2025/11/1.webp',
@@ -9,6 +11,12 @@ const slides = [
 ]
 
 export default function Hero() {
+  const [index, setIndex] = useState(0)
+  useEffect(()=>{
+    const id = setInterval(()=> setIndex(i => (i+1)%slides.length), 4500)
+    return ()=> clearInterval(id)
+  },[])
+
   return (
     <section id="hero" className="relative min-h-[92vh] overflow-hidden">
       <video
@@ -23,11 +31,19 @@ export default function Hero() {
       {/* gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black" />
 
-      {/* subtle slideshow drifting in z */}
-      <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-40">
-        <div className="absolute inset-0 animate-[slideshow_40s_linear_infinite]" style={{backgroundImage:`url(${slides[0]})`, backgroundSize:'cover', backgroundPosition:'center'}} />
-        <div className="absolute inset-0 animate-[slideshow_40s_linear_infinite_10s]" style={{backgroundImage:`url(${slides[1]})`, backgroundSize:'cover', backgroundPosition:'center'}} />
-        <div className="absolute inset-0 animate-[slideshow_40s_linear_infinite_20s]" style={{backgroundImage:`url(${slides[2]})`, backgroundSize:'cover', backgroundPosition:'center'}} />
+      {/* slideshow */}
+      <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-35">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{backgroundImage:`url(${slides[index]})`}}
+            initial={{opacity:0, scale:1.05}}
+            animate={{opacity:1, scale:1}}
+            exit={{opacity:0, scale:1.08}}
+            transition={{duration:1.2}}
+          />
+        </AnimatePresence>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-24">
@@ -46,22 +62,19 @@ export default function Hero() {
         </motion.div>
 
         <div className="mt-10 flex flex-wrap gap-4">
-          <a href="#cases" className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black font-medium overflow-hidden">
-            <span className="absolute inset-0 bg-lime-400 translate-y-full group-hover:translate-y-0 transition-transform" />
-            <span className="relative z-10">Показать кейсы</span>
-          </a>
-          <a href="#contact" className="group inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/30 text-white hover:border-fuchsia-400 hover:text-fuchsia-300 transition">
-            Заказать проект
-          </a>
+          <Magnetic>
+            <a href="#cases" className="group relative inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black font-medium overflow-hidden">
+              <span className="absolute inset-0 bg-lime-400 translate-y-full group-hover:translate-y-0 transition-transform" />
+              <span className="relative z-10">Показать кейсы</span>
+            </a>
+          </Magnetic>
+          <Magnetic>
+            <a href="#contact" className="group inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/30 text-white hover:border-fuchsia-400 hover:text-fuchsia-300 transition">
+              Заказать проект
+            </a>
+          </Magnetic>
         </div>
       </div>
-
-      <style>{`
-        @keyframes slideshow { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
-        .animate-[slideshow_40s_linear_infinite]{ animation: slideshow 40s linear infinite; }
-        .animate-[slideshow_40s_linear_infinite_10s]{ animation: slideshow 40s linear infinite; animation-delay:10s; }
-        .animate-[slideshow_40s_linear_infinite_20s]{ animation: slideshow 40s linear infinite; animation-delay:20s; }
-      `}</style>
     </section>
   )
 }

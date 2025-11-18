@@ -1,13 +1,34 @@
 import { useState } from 'react'
 import { Instagram, Send, Mail, MessageCircle } from 'lucide-react'
 
+const API_URL = import.meta.env.VITE_BACKEND_URL || ''
+
 export default function Contact(){
   const [form, setForm] = useState({name:'', phone:'', email:'', company:'', task:''})
+  const [loading, setLoading] = useState(false)
+  const [status, setStatus] = useState(null)
+
   const handle = (e) => setForm({...form, [e.target.name]: e.target.value})
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
-    alert('Заявка отправлена! (демо)')
+    setLoading(true)
+    setStatus(null)
+    try {
+      const res = await fetch(`${API_URL}/api/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, source: 'landing' })
+      })
+      if(!res.ok) throw new Error('Ошибка отправки')
+      const data = await res.json()
+      setStatus({ ok: true, id: data.id })
+      setForm({name:'', phone:'', email:'', company:'', task:''})
+    } catch (err){
+      setStatus({ ok: false, message: err.message })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -32,7 +53,7 @@ export default function Contact(){
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-white/60 mb-1">Имя</label>
-              <input name="name" value={form.name} onChange={handle} placeholder="Ваше имя" className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-400" />
+              <input required name="name" value={form.name} onChange={handle} placeholder="Ваше имя" className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-400" />
             </div>
             <div>
               <label className="block text-sm text-white/60 mb-1">Телефон</label>
@@ -51,7 +72,10 @@ export default function Contact(){
               <textarea name="task" value={form.task} onChange={handle} placeholder="Кратко опиши, что вы хотите сделать" rows={5} className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-400" />
             </div>
           </div>
-          <button type="submit" className="mt-6 w-full px-6 py-3 rounded-full bg-lime-400 text-black font-bold hover:bg-fuchsia-500 transition">Заказать проект</button>
+          <button disabled={loading} type="submit" className="mt-6 w-full px-6 py-3 rounded-full bg-lime-400 text-black font-bold hover:bg-fuchsia-500 transition disabled:opacity-60 disabled:cursor-not-allowed">{loading ? 'Отправка...' : 'Заказать проект'}</button>
+          {status && (
+            <p className={`text-sm mt-3 ${status.ok ? 'text-lime-400' : 'text-red-400'}`}>{status.ok ? 'Заявка отправлена. Мы на связи!' : `Ошибка: ${status.message}`}</p>
+          )}
           <p className="text-xs text-white/60 mt-3">Нажимая на кнопку, вы соглашаетесь с обработкой персональных данных.</p>
         </form>
       </div>

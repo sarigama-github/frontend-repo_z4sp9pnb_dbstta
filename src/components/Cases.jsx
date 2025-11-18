@@ -1,3 +1,6 @@
+import Tilt from './Tilt'
+import { useEffect, useState } from 'react'
+
 const groups = [
   {
     title: '🕺 Nightlife & Event',
@@ -39,21 +42,47 @@ const groups = [
 ]
 
 export default function Cases(){
+  const [gIndex, setGIndex] = useState(0)
+  const [itemIndex, setItemIndex] = useState(0)
+
+  // auto-slide within group
+  useEffect(()=>{
+    const id = setInterval(()=>{
+      setItemIndex((i)=> (i+1) % groups[gIndex].items.length)
+    }, 4000)
+    return ()=> clearInterval(id)
+  }, [gIndex])
+
   return (
     <section id="cases" className="relative bg-black text-white py-24">
       <div className="max-w-7xl mx-auto px-6 space-y-12">
         {groups.map((g, gi)=> (
           <div key={gi}>
-            <h3 className="text-2xl sm:text-4xl font-extrabold mb-6">{g.title}</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl sm:text-4xl font-extrabold">{g.title}</h3>
+              <div className="flex gap-2">
+                {g.items.map((_, i)=> (
+                  <button
+                    key={i}
+                    onClick={()=>{ setGIndex(gi); setItemIndex(i) }}
+                    className={`h-2 w-6 rounded-full transition-colors ${gi===gIndex && i===itemIndex ? 'bg-fuchsia-500' : 'bg-white/20 hover:bg-white/40'}`}
+                    aria-label={`Показать слайд ${i+1}`}
+                  />
+                ))}
+              </div>
+            </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {g.items.map((it, ii)=> (
-                <div key={ii} className="group relative overflow-hidden rounded-xl border border-white/10">
-                  <img src={it.img} alt={it.name} className="h-60 w-full object-cover group-hover:scale-105 transition duration-500" />
+                <Tilt key={ii} className={`group relative overflow-hidden rounded-xl border border-white/10 ${gi===gIndex && ii===itemIndex ? 'sm:col-span-2 lg:col-span-3' : ''}`}>
+                  <div className="relative">
+                    <img src={it.img} alt={it.name} className="h-60 w-full object-cover group-hover:scale-105 transition duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition" />
+                  </div>
                   <div className="p-4">
                     <h4 className="font-bold text-xl group-hover:text-fuchsia-300 transition">{it.name}</h4>
                     <p className="text-white/80 text-sm whitespace-pre-line">{it.desc}</p>
                   </div>
-                </div>
+                </Tilt>
               ))}
             </div>
           </div>
